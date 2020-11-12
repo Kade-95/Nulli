@@ -1,0 +1,17 @@
+{
+  "name": "TQL",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "kedio": "^1.0.14"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "nodemon test.js",
+    "start": "nodemon index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
