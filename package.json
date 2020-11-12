@@ -1,5 +1,5 @@
 {
-  "name": "TQL",
+  "name": "nulli",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -13,5 +13,13 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kade-95/Nulli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Kade-95/Nulli/issues"
+  },
+  "homepage": "https://github.com/Kade-95/Nulli#readme"
 }
