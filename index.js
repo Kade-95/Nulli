@@ -13,10 +13,6 @@ class Nulli {
         return trans.init();
     }
 
-    close() {
-
-    }
-
     createCollection(...names) {//create new collection(s)
         this.open().then(trans => {
             for (let name of names) {
@@ -319,13 +315,96 @@ class Nulli {
                     }
                     trans.openCollection = params.collection;
                     trans.close();
-                    resolve(found);
+                    resolve(JSON.parse(JSON.parse(found)));
                 });
         });
     }
 
-    aggregate(params = { collection: '', query: {}, options: { many: false } }) {
+    aggregate(params = { collection: '', query: {}, groups: {}, options: { many: false } }) {
+        if (params == undefined) params = {};//initialize params
+        if (params.collection == undefined) params.collection = '';
+        if (params.query == undefined) params.query = {};
+        if (params.options == undefined) params.options = {};
 
+        return new Promise((resolve, reject) => {
+            if (params.constructor != Object) {//validate params
+                reject("Error: Invalid parameters recieved");
+                return;
+            }
+            else if (params.collection == '') {
+                reject("Error: Invalid collection name recieved");
+                return;
+            }
+            else if (params.options.constructor != Object) {
+                reject("Error: Invalid collection name recieved");
+                return;
+            }
+
+            this.open()
+                .then((trans) => {
+                    if (trans.collections[params.collection] == undefined) {
+                        trans.collections[params.collection] = [];
+                    }
+
+                    let collection = trans.collections[params.collection];
+                    let found;
+
+                    if (Object.keys(params.query).length) {//if query is set
+                        if (params.options.many == true) {
+                            found = collection.filter(c => global.base.object.isSubObject(c, params.query));
+                        }
+                        else {
+                            found = collection.find(c => global.base.object.isSubObject(c, params.query));
+                        }
+                    }
+                    else {//no query recieved, return all
+                        if (params.options.many == true) {
+                            found = collection;
+                        }
+                        else {
+                            found = collection[0];
+                        }
+                    }
+                    trans.openCollection = params.collection;
+                    trans.close();
+
+                    if (found) {
+                        let funcs = {
+                            $sum: (...a) => { return a.reduce((i, j) => i + j) },
+                            $dif: (...a) => { return a[0] - a[1] ? a[1] : 0 },
+                            $mul: (...a) => { return a.reduce((i, j) => i * j) },
+                            $dif: (...a) => { return a[0] - a[1] ? a[1] : 1 },
+                            cast: (a, to) => {
+                                if (to == 'int') a = parseInt(a);
+                                else if (to == 'float') a = parseFloat(a);
+                                else if (to == 'string') a = a.toString();
+                                else if (to == 'date') a = new Date(a);
+                                return a;
+                            },
+                        }
+
+                        let x, list, l;
+                        if (Array.isArray(found)) {
+                            for (let i = 0; i < found.length; i++) {
+                                for (x in groups) {
+                                    list = [];
+                                    for (l of groups[x].list) list.push(found[i][l]);
+                                    found[i][x] = funcs[groups[x].action](...list);
+                                }
+                            }
+                        }
+                        else {
+                            for (x in groups) {
+                                list = [];
+                                for (l of groups[x].list) list.push(found[l]);
+                                found[x] = funcs[groups[x].action](...list);
+                            }
+                        }
+                    }
+
+                    resolve(found);
+                });
+        });
     }
 
     relate(params = { collection: '', query: {}, relations: {}, options: {} }) {
